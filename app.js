@@ -4,12 +4,14 @@ const { graphqlHTTP } = require('express-graphql');
 const {buildSchema} = require('graphql')
 require('dotenv').config()
 const mongoose = require('mongoose')
+const bcrypt = require('bcrypt')
 
 const PORT = process.env.PORT || 3000
 
 const app = express()
 
 const Event = require('./models/event.model')
+const User = require('./models/user.model')
 
 app.use(json())
 
@@ -22,11 +24,22 @@ const graphQlSchema = `
             date: String!
         }
 
+        type User {
+            _id: ID!
+            email: String!
+            password: String
+        }
+
         input EventInput {
             title: String!
             description: String!
             price: Float!
             date: String!
+        }
+
+        input UserInput {
+            email: String!
+            password: String!
         }
 
         type RootQuery {
@@ -35,6 +48,7 @@ const graphQlSchema = `
 
         type RootMutation {
             createEvent(eventInput: EventInput): Event
+            createUser(userInput: UserInput): User
         }
 
         schema {
@@ -72,6 +86,31 @@ app.use('/graphql', graphqlHTTP({
                 .save()
                 .then(ev => {
                     return {...ev._doc, _id: ev.id}
+                })
+                .catch(err => {
+                    throw err
+                })
+        },
+        createUser: async (args) => {
+            return User.findOne({email: args.userInput.email})
+                .then(user => {
+                    if(user){
+                        throw Error('User is already exist!')
+                    }
+
+                    return bcrypt
+                    .hash(args.userInput.password, 12)
+                })
+                .then(password => {
+                    const user = new User({
+                        email: args.userInput.email,
+                        password
+                    })
+
+                    return user.save()
+                })
+                .then(user => {
+                    return {...user._doc, password: null, _id: user.id}
                 })
                 .catch(err => {
                     throw err
