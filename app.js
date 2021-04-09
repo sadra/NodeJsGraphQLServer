@@ -12,6 +12,9 @@ app.use(json());
 
 const graphQlSchema = require('./graphql/schema');
 const graphQlResolvers = require('./graphql/resolvers');
+const authGuard = require('./middlewares/authGuard');
+
+app.use(authGuard);
 
 app.use(
   '/graphql',
