@@ -1,7 +1,6 @@
 const Event = require('../../models/event.model');
 const User = require('../../models/user.model');
-const { transformEvent } = require('./transformers');
-const { events, singleEvent, user } = require('./commons');
+const { transformEvent } = require('./commons');
 
 module.exports = {
   events: async () => {
@@ -34,11 +33,11 @@ module.exports = {
       }
 
       creator.createdEvents.push(event);
+
       await creator.save();
 
       return createdEvent;
     } catch (err) {
-      console.log(err);
       throw err;
     }
   },
