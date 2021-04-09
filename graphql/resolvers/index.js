@@ -4,19 +4,20 @@ const Event = require('../../models/event.model');
 const User = require('../../models/user.model');
 const Booking = require('../../models/booking.model');
 
+const transformEvent = (event) => {
+  return {
+    ...event._doc,
+    _id: event.id,
+    date: new Date(event._doc.date).toISOString(),
+    creator: user.bind(this, event.creator),
+  };
+};
+
 const events = async (eventIds) => {
   try {
     const events = await Event.find({ _id: { $in: eventIds } });
 
-    events.map((event) => {
-      return {
-        ...event._doc,
-        _id: event.id,
-        date: new Date(event._doc.date).toISOString(),
-        creator: user.bind(this, event.creator),
-      };
-    });
-    return events;
+    return events.map((event) => transformEvent);
   } catch (err) {
     throw err;
   }
@@ -54,14 +55,7 @@ module.exports = {
     try {
       const events = await Event.find();
 
-      return events.map((event) => {
-        return {
-          ...event._doc,
-          _id: event.id,
-          date: new Date(event._doc.date).toISOString(),
-          creator: user.bind(this, event._doc.creator),
-        };
-      });
+      return events.map((event) => transformEvent);
     } catch (err) {
       throw err;
     }
@@ -93,12 +87,7 @@ module.exports = {
     try {
       const result = await event.save();
 
-      const createdEvent = {
-        ...result._doc,
-        _id: result._doc._id.toString(),
-        date: new Date(event._doc.date).toISOString(),
-        creator: user.bind(this, result._doc.creator),
-      };
+      const createdEvent = transformEvent(result);
 
       const creator = await User.findById('606f4df083b24c907e27463b');
 
@@ -158,11 +147,7 @@ module.exports = {
     try {
       const booking = await Booking.findById(args.bookingId).populate('event');
 
-      const event = {
-        ...booking.event._doc,
-        _id: booking.event.id,
-        creator: user.bind(this, booking.event._doc.creator),
-      };
+      const event = transformEvent(booking.event);
 
       await Booking.deleteOne({ _id: args.bookingId });
 
