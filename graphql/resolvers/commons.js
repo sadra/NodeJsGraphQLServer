@@ -1,6 +1,15 @@
 const Event = require('../../models/event.model');
 const User = require('../../models/user.model');
 const { dateToString } = require('../../helpers/date');
+const DataLoader = require('dataloader');
+
+const eventDataLoader = new DataLoader((eventIds) => {
+  return events(eventIds);
+});
+
+const userDataLoader = new DataLoader((userIds) => {
+  return User.find({ _id: { $in: userIds } });
+});
 
 const events = async (eventIds) => {
   try {
@@ -15,8 +24,8 @@ const events = async (eventIds) => {
 
 const singleEvent = async (eventId) => {
   try {
-    const event = await Event.findById(eventId);
-    return transformEvent(event);
+    const event = await eventDataLoader.load(eventId.toString());
+    return event;
   } catch (err) {
     throw err;
   }
@@ -24,11 +33,15 @@ const singleEvent = async (eventId) => {
 
 const user = async (userId) => {
   try {
-    const user = await User.findById(userId);
+    const user = await userDataLoader.load(userId.toString());
+
     return {
       ...user._doc,
       _id: user.id,
-      createdEvents: events.bind(this, user._doc.createdEvents),
+      createdEvents: eventDataLoader.loadMany.bind(
+        this,
+        user._doc.createdEvents,
+      ),
     };
   } catch (err) {
     throw err;
@@ -48,7 +61,7 @@ const transformBooking = (booking) => {
   return {
     ...booking._doc,
     _id: booking.id,
-    user: user.bind(this, booking._doc.user),
+    user: userDataLoader.load.bind(this, booking._doc.user),
     event: singleEvent.bind(this, booking._doc.event),
     createdAt: dateToString(booking._doc.createdAt),
     updatedAt: dateToString(booking._doc.updatedAt),
