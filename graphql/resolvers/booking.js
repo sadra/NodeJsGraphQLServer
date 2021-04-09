@@ -3,7 +3,11 @@ const Booking = require('../../models/booking.model');
 const { transformBooking, transformEvent } = require('./commons');
 
 module.exports = {
-  bookings: async () => {
+  bookings: async (args) => {
+    if (!args.isAuth) {
+      throw new Error('UnAuthorized!');
+    }
+
     try {
       const bookings = await Booking.find();
       return bookings.map((booking) => {
@@ -14,6 +18,10 @@ module.exports = {
     }
   },
   bookEvent: async (args) => {
+    if (!args.isAuth) {
+      throw new Error('UnAuthorized!');
+    }
+
     const fetchedEvent = await Event.findOne({ _id: args.eventId });
 
     const booking = new Booking({
@@ -26,6 +34,10 @@ module.exports = {
     return transformBooking(result);
   },
   cancelBooking: async (args) => {
+    if (!args.isAuth) {
+      throw new Error('UnAuthorized!');
+    }
+
     try {
       const booking = await Booking.findById(args.bookingId).populate('event');
 

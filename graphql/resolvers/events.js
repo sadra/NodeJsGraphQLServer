@@ -13,6 +13,10 @@ module.exports = {
     }
   },
   createEvent: async (args) => {
+    if (!args.isAuth) {
+      throw new Error('UnAuthorized!');
+    }
+
     const event = new Event({
       title: args.eventInput.title,
       description: args.eventInput.description,
