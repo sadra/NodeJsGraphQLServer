@@ -12,6 +12,8 @@ Choose the right branch in this repository to get the code for the different par
 npm install
 ```
 
+Clone `.env.example` to `.env` and fill the environments as your desire.
+
 ## Run the server
 
 ```sh
